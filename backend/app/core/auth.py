@@ -1,11 +1,10 @@
-from fastapi import Header, HTTPException, status
+from __future__ import annotations
 
-from ..config.settings import settings
+from fastapi import Header, HTTPException
 
 
-async def verify_token(authorization: str = Header(...)) -> None:
+async def verify_token(authorization: str | None = Header(default=None)) -> None:
+    if authorization is None:
+        return
     if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid auth header")
-    token = authorization.split(" ", 1)[1]
-    if token != settings.api_token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
