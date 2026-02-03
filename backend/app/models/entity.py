@@ -1,52 +1,53 @@
 from __future__ import annotations
 
-from enum import Enum
-from typing import Any, Dict, List, Optional
-from uuid import UUID, uuid4
 from datetime import datetime
+from enum import Enum
+from typing import Dict, List
 
 from pydantic import BaseModel, Field
 
-from .confidence import ConfidenceScore
-
 
 class EntityType(str, Enum):
-    USERNAME = "username"
-    EMAIL = "email"
-    PHONE = "phone"
-    IP_ADDRESS = "ip_address"
-    DOMAIN = "domain"
-    GAMER_TAG = "gamer_tag"
-    ACCOUNT_ID = "account_id"
-    HASH = "hash"
-    ALIAS = "alias"
-    BEHAVIORAL_EVENT = "behavioral_event"
-    NOTE = "note"
-
-
-class SourceType(str, Enum):
-    API = "api"
-    TOOL = "tool"
-    FILE = "file"
+    file_hash = "file_hash"
+    domain = "domain"
+    ip = "ip"
+    url = "url"
+    malware = "malware"
+    service = "service"
+    port = "port"
+    organization = "organization"
+    threat_actor = "threat_actor"
+    scanner = "scanner"
+    benign_service = "benign_service"
+    email = "email"
+    certificate = "certificate"
+    tactic = "tactic"
+    technique = "technique"
+    threat = "threat"
 
 
 class EntitySource(BaseModel):
     name: str
-    type: SourceType
-
-
-class RelationshipRef(BaseModel):
-    relationship_id: UUID
-    relationship_type: str
+    source_type: str
+    confidence: float | None = None
+    reference_url: str | None = None
 
 
 class Entity(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
-    entity_type: EntityType
-    canonical_value: str
-    source: EntitySource
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-    confidence: ConfidenceScore = Field(default_factory=lambda: ConfidenceScore(value=0.5))
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    relationships: List[RelationshipRef] = Field(default_factory=list)
+    id: str
+    type: EntityType
+    value: str
+    sources: List[EntitySource]
+    timestamp: datetime
+    confidence: float = Field(ge=0.0, le=1.0)
+    metadata: Dict[str, str | int | float | bool | None] = Field(default_factory=dict)
+
+
+class Relationship(BaseModel):
+    id: str
+    source_id: str
+    target_id: str
+    relationship_type: str
+    confidence: float = Field(ge=0.0, le=1.0)
+    provenance: List[EntitySource]
+    metadata: Dict[str, str | int | float | bool | None] = Field(default_factory=dict)
